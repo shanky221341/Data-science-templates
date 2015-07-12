@@ -1,14 +1,18 @@
 #template for data_cleaning in R based on the titanic data set 
 
 #install the packages in the start which are missing
-list.of.packages <- c("Amelia")
+list.of.packages <- c("Amelia","stringr")
 new.packages <- list.of.packages[!(list.of.packages %in% installed.packages()[,"Package"])]
 if(length(new.packages)) install.packages(new.packages,repos="http://cran.ma.imperial.ac.uk/")
 
+#set the screen display width 
+howWide = 150
+options(width = howWide)
+
 #read the data
-#hange the names as appropriate
-train.data<-read.csv("train.csv",na.strings=c("NA" ,""))
+#change the names as appropriate
 # use na.strings for converting the strings value in the data to the na's
+train.data<-read.csv("train.csv",na.strings=c("NA" ,""))
 
 #use str() for checking the type and th efirst few value of the data
 print(str(train.data))
@@ -47,8 +51,38 @@ missmap(train.data,main="Missng Map")
 
 ## Inputting the missing values 
 
-#frequently use the table() function  to view the statistics
+#frequently use the table() function  to view the statistics of the particular column
 
 # see the statistics of the Embarked column in the and as well as see the missing values in it. 
 print(table(train.data$Embarked, useNA= "always"))
 
+#We have to find how many mising values are there as per mr,master doctor etc
+#so first convert the name into character type from the factor type 
+train.data$Name<-as.character(train.data$Name)
+
+#see the changed structure 
+print(str(train.data))
+
+#split the names by space and see their stats
+table_words<-table(unlist(strsplit(train.data$Name,"\\s+")))
+print(table_words)
+
+#using stringr library macth the titles of people and see how many are missing 
+library(stringr)
+tb<-cbind(train.data$Age,str_match(train.data$Name,"[a-zA-Z]+\\."))
+tb<-table(tb[is.na(tb[,1]),2])
+print(tb)
+
+#find the means as per the titles
+mean.mr<-mean(subset(train.data,grepl(" Mr\\.",Name)& !is.na(Age),select="Age")[,1])
+mean.mrs<-mean(subset(train.data,grepl( "Mrs\\.",Name)&!is.na(Age),select="Age")[,1])
+mean.miss<-mean(subset(train.data,grepl( "Miss\\.",Name)&!is.na(Age),select="Age")[,1])
+mean.master<-mean(subset(train.data,grepl( "Master\\.",Name)&!is.na(Age),select="Age")[,1])
+mean.dr<-mean(subset(train.data,grepl( "Dr\\.",Name)&!is.na(Age),select="Age")[,1])
+
+#assign the missing titles with their respective means
+train.data$Age[grepl( "Mr\\.",train.data$Name)&is.na(train.data$Age)]<-mean.mr
+train.data$Age[grepl( "Mrs\\.",train.data$Name)&is.na(train.data$Age)]<-mean.mrs
+train.data$Age[grepl( "Miss\\.",train.data$Name)&is.na(train.data$Age)]<-mean.miss
+train.data$Age[grepl( "Master\\.",train.data$Name)&is.na(train.data$Age)]<-mean.master
+train.data$Age[grepl( "Dr\\.",train.data$Name)&is.na(train.data$Age)]<-mean.dr
