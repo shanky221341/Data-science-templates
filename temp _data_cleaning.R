@@ -56,6 +56,9 @@ missmap(train.data,main="Missng Map")
 # see the statistics of the Embarked column in the and as well as see the missing values in it. 
 print(table(train.data$Embarked, useNA= "always"))
 
+# by the statistics we can see that we have highest embarkment marked as S then we model the remaining as 'S'
+train.data$Embarked[is.na(train.data$Embarked)]<-"S"
+
 #We have to find how many mising values are there as per mr,master doctor etc
 #so first convert the name into character type from the factor type 
 train.data$Name<-as.character(train.data$Name)
@@ -86,3 +89,41 @@ train.data$Age[grepl( "Mrs\\.",train.data$Name)&is.na(train.data$Age)]<-mean.mrs
 train.data$Age[grepl( "Miss\\.",train.data$Name)&is.na(train.data$Age)]<-mean.miss
 train.data$Age[grepl( "Master\\.",train.data$Name)&is.na(train.data$Age)]<-mean.master
 train.data$Age[grepl( "Dr\\.",train.data$Name)&is.na(train.data$Age)]<-mean.dr
+
+#plotting  the vairiables 
+
+#plotting passenger class
+barplot(table(train.data$Pclass),main="Passenger class",names=c("first","second","third"))
+
+#plotting Survived people statistics
+barplot(table(train.data$Survived),main="Passenger Survival",names=c("Perished","Survived"))
+
+#plottting gender data
+barplot(table(train.data$Sex),main="Passenger Gender")
+
+#histogram of the age
+hist(train.data$Age,main="Passenger Age",xlab="Age")
+
+#plotting the bar plot of the sibling passengers
+barplot(table(train.data$SibSp),main="Passenger Siblings")
+
+#plotting the passenger parch distribution
+barplot(table(train.data$Parch),main="Passenger Parents and children")
+
+#plotting the histogram of the passenger fair
+hist(train.data$Fare,main="Passenger Fare",xlab="Fare")
+
+#plotting the bar plot fot the port of embarkation
+barplot(table(train.data$Embarked),main="Port of Embarkation")
+
+#see who survived by sex
+counts<-table(train.data$Survived,train.data$Sex)
+
+#bar plot for the passenger survival by sex
+barplot(counts,col = c("black","blue"),legend=c("Perished","Survived"),main="Passenger Survival by Sex")
+
+#see who survived by pclass
+counts<-table(train.data$Survived,train.data$Pclass)
+
+#bar plot for the passenger survival by pclass
+barplot(counts,col = c("black","blue"),legend=c("Perished","Survived"),main="Passenger Survival by Pclass")
