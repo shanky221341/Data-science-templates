@@ -1,7 +1,7 @@
 #template for data_cleaning in R based on the titanic data set 
 
 #install the packages in the start which are missing
-list.of.packages <- c("Amelia","stringr")
+list.of.packages <- c("Amelia","stringr","partykit","Formula")
 new.packages <- list.of.packages[!(list.of.packages %in% installed.packages()[,"Package"])]
 if(length(new.packages)) install.packages(new.packages,repos="http://cran.ma.imperial.ac.uk/")
 
@@ -127,3 +127,51 @@ counts<-table(train.data$Survived,train.data$Pclass)
 
 #bar plot for the passenger survival by pclass
 barplot(counts,col = c("black","blue"),legend=c("Perished","Survived"),main="Passenger Survival by Pclass")
+
+#bar plot for the gender composition of each class
+counts<-table(train.data$Sex,train.data$Pclass)
+barplot(counts,col = c("black","blue"),legend=c("female","male"),main="Gender composition of each Pclass")
+
+#histogram of the passengers survived and  not survived
+hist(train.data$Age[train.data$Survived=="0"],col="black",breaks=seq(0,80,by=2),main="passenger age histogram",xlab = "Age")
+hist(train.data$Age[train.data$Survived=="1"],col="blue",breaks=seq(0,80,by=2),add=T)
+
+#categorizing people with different ages into different groups such as childeren below 13, youth between 13 and 19
+#aduts in 20 to 65 and senior citizens are above 65
+train.child<-train.data$Survived[train.data$Age<13]
+child_percent_survived<-length(train.child[which(train.child==1)])/length(train.child)
+
+train.youth<-train.data$Survived[train.data$Age >=13 & train.data$Age <25]
+youth_percent_survived<-length(train.youth[which(train.youth==1)])/length(train.youth)
+
+train.adult<-train.data$Survived[train.data$Age >=20 & train.data$Age <65]
+adult_percent_survived<-length(train.adult[which(train.adult==1)])/length(train.adult)
+
+train.senior<-train.data$Survived[train.data$Age >=65]
+senior_percent_survived<- length(train.senior[which(train.senior==1)])/length(train.senior)
+
+#plotting the charts using mosaic function
+
+mosaicplot(train.data$Pclass~train.data$Survived,color=TRUE,main="passenger survival class",xlab="pclass",ylab="survival")
+
+#predicting the passenger survival by using the decission tree
+
+#function to split data into 70 percent train and 30 percent test data
+#seed is for reprdducing the same thing(reproducible research)
+split.data = function(data, p = 0.7, s = 666){
+       set.seed(s)
+       index = sample(1:dim(data)[1])
+       train = data[index[1:floor(dim(data)[1] * p)], ]
+       test = data[index[((ceiling(dim(data)[1] * p)) + 
+                             1):dim(data)[1]], ]
+       return(list(train = train, test = test))
+   } 
+#p is the percentage and s is the random seed value
+allset<-split.data(train.data,p=0.7)
+trainset<-allset$train
+testset<-allset$test
+
+require('partykit')
+require('Formula')
+train.ctree<-ctree(Survived~Pclass+Sex+Age+SibSp+Fare+Parch+Embarked,data=trainset)
+train.ctree
